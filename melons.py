@@ -3,35 +3,46 @@ import random
 
 import datetime
 
+
+class TooManyMelonsError(ValueError):
+    """More than 100 melons is bad!!"""
+     def __init__(self):
+         super(TooManyMelonsError, self).__init__("No more than 100 melons!")
+
+
 class AbstractMelonOrder(object):
     """An abstract base class that other Melon Orders inherit from."""
     def __init__(self, species, qty, order_type, tax):
         self.species = species
+
+        if qty > 100:
+            raise TooManyMelonsError()
         self.qty = qty
+      
         self.shipped = False
         self.order_type = order_type
         self.tax = tax
 
     def get_total(self):
         """Calculate price, including tax."""
-        base_price = get_base_price()
-
-        if self.species == "Christmas":
-            base_price = base_price * 1.5
+        base_price = self.get_base_price()
 
         total = (1 + self.tax) * self.qty * base_price
 
         return total
 
-
     def get_base_price(self):
         """ Calculates base price based on rush hour"""
-        if datetime.datetime.today().weekday() in range(0,5)
-                and datetime.datetime.today().hour in range(8,12):
-            return self.qty * 4
+        base_price = random.randint(5, 9)
 
-        return random.randint(5,9)
+        if (datetime.datetime.today().weekday() in range(0, 5)
+                and datetime.datetime.today().hour in range(8, 13)):
+            base_price += self.qty * 4
 
+        if self.species == "Christmas":
+            base_price = base_price * 1.5
+
+        return base_price
 
     def mark_shipped(self):
         """Record the fact than an order has been shipped."""
@@ -56,6 +67,7 @@ class InternationalMelonOrder(AbstractMelonOrder):
 
 
     def get_total(self):
+        """ Calculates international fee for oders less than 10 melons"""
         if self.qty > 10:
             return super(InternationalMelonOrder, self).get_total()
         else:
@@ -73,4 +85,5 @@ class GovernmentMelonOrder(AbstractMelonOrder):
         self.passed_inspection = False
 
     def mark_inspection(self, passed):
+        """Sets inspection passed state"""
         self.passed_inspection = passed
